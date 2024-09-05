@@ -14,13 +14,14 @@ screen_t screen_init(int height, int width){
     for(int i=0; i<height; i++){
         s.pixel[i]=calloc(width, sizeof(pixel_t));
     }
+    terminal_hide_cursor();
     return s;
 }
 
-void screen_draw_gpixel(screen_t *screen, int x, int y, color_t color){
-    screen->pixel[y][x].text[0]=screen->pixel[y][x].text[1]=' ';
-    screen->pixel[y][x].color=color;
-    screen->pixel[y][x].init=1;
+void screen_draw_gpixel(screen_t *screen, v2i_t p, color_t color){
+    screen->pixel[p.y][p.x].text[0]=screen->pixel[p.y][p.x].text[1]=' ';
+    screen->pixel[p.y][p.x].color=color;
+    screen->pixel[p.y][p.x].init=1;
 }
 
 void screen_show(screen_t screen){
@@ -40,56 +41,42 @@ void screen_show(screen_t screen){
     terminal_cursor_up(screen.height);
 }
 
-/*
-void screen_set_pixel(screen_t screen, int x, int y, color_t color){
-    screen.pixel[y][x].x=x;
-    screen.pixel[y][x].y=y;
-    screen.pixel[y][x].color=color;
-}
 
-void clear_screen(){
-    clear_terminal();
-    set_terminal_cursor(0,0);
-}
-
-void draw_pixel(pixel_t pixel){
-    set_terminal_cursor(pixel.y+1, pixel.x*2+1);
-    terminal_set_rgb_background(pixel.color.r, pixel.color.g,  pixel.color.b);
-    printf("  ");
-    terminal_reset_color();
-}
-
-void draw_line(int x1, int y1, int x2, int y2, color_t color){
-    pixel_t pixel;
-    pixel.color=color;
-    if(x1==x2 && y1==y2){
-        pixel.x=x1;
-        pixel.y=y1;
-        draw_pixel(pixel);
+void screen_draw_gline(screen_t *screen, v2i_t p1, v2i_t p2, color_t color){
+    if(p1.x==p2.x && p1.y==p2.y){
+        screen_draw_gpixel(screen, p1, color);
         return;
     }
-    if(x1==x2){
-        pixel.x=x1;
-        if(y1>y2)
-            y1^=y2^=y1^=y2;
-        for(int y=y1; y<=y2; y++){
-            pixel.y=y;
-            draw_pixel(pixel);
+    if(p1.x==p2.x){
+        if(p1.y>p2.y)
+            p1.y^=p2.y^=p1.y^=p2.y;
+        for(int y=p1.y; y<=p2.y; y++){
+            screen_draw_gpixel(screen, (v2i_t){p1.x, y}, color);
         }
         return;
     }
-    if(x1>x2){
-        x1^=x2^=x1^=x2;
-        y1^=y2^=y1^=y2;
+    if(p1.x>p2.x){
+        p1.x^=p2.x^=p1.x^=p2.x;
+        p1.y^=p2.y^=p1.y^=p2.y;
     }
-    double m = (double)(y2-y1)/(x2-x1);
-    double q = (double)(y2-m*x2);
-    for(int x=x1, y; x<=x2; x++){
+    double m = (double)(p2.y-p1.y)/(p2.x-p1.x);
+    double q = (double)(p2.y-m*p2.x);
+    for(int x=p1.x, y; x<=p2.x; x++){
         y=round_to_int(m*x+q);
-        pixel.y=round_to_int(m*x+q);
-        pixel.x=x;
-        draw_pixel(pixel);
+        screen_draw_gpixel(screen, (v2i_t){x,y}, color);
     }
+}
+
+void screen_draw_gtriangle(screen_t * screen, v2i_t p1, v2i_t p2, v2i_t p3, color_t color){
+    screen_draw_gline(screen, p1, p2, color);
+    screen_draw_gline(screen, p2, p3, color);
+    screen_draw_gline(screen, p3, p1, color);
+}
+
+/*
+void clear_screen(){
+    clear_terminal();
+    set_terminal_cursor(0,0);
 }
 
 void draw_triangle(int x1, int y1, int x2, int y2, int x3, int y3){

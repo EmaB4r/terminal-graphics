@@ -4,17 +4,14 @@
 int main(int argc, char const *argv[])
 {
     char c=0;
+    terminal_hide_cursor();
+    screen_t sc = screen_init(70, 70);
     while(1){
-        screen_t sc = screen_init(97, 97);
-        for(int y=0; y<sc.height; y++){
-            for(int x=0; x<sc.width; x++){
-                screen_draw_gpixel(&sc, x, y, (color_t){.r=c, .g=c, .b=c});
-            }
-        }
+        screen_draw_gtriangle(&sc, (v2i_t){0,0},(v2i_t){69,69},(v2i_t){35,41}, (color_t){255, 255, 255});
         screen_show(sc);
         c++;
         c=c%256;
-        usleep(1000);
+        usleep(5000);
     }
     return 0;
 }
