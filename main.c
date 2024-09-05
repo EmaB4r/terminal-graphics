@@ -1,17 +1,32 @@
 #include "Graphics.h"
-#define __USE_MISC
-#include "unistd.h"
+
+int f_to_int(double f){
+    int i=(int) f;
+    f=f-i;
+    return (f>=0.5)? i+1 : i;
+}
+
+void update_ypos(v2d_t * pos, double * speed, double acc, long dt_ms){
+    double dt_s = dt_ms/(double)1000;
+    *speed= *speed + acc*dt_s;
+    pos->y=pos->y + *speed * dt_s+ acc*dt_s*dt_s;
+    //printf("%f, %lu, %f, %f\n", pos->y, dt_ms,dt_s, *speed);
+}
+
 int main(int argc, char const *argv[])
 {
     char c=0;
     terminal_hide_cursor();
-    screen_t sc = screen_init(70, 70);
-    while(1){
-        screen_draw_gtriangle(&sc, (v2i_t){0,0},(v2i_t){69,69},(v2i_t){35,41}, (color_t){255, 255, 255});
+    v2d_t d_pos = {39, 39};
+    v2i_t i_pos = {39, 39};
+    double acc = 9.81;
+    double speed = -20;
+    screen_t sc = screen_init(90, 100);
+    SCREEN_LOOP(120,{
+        i_pos.y=f_to_int(d_pos.y);
+        update_ypos(&d_pos, &speed, acc, DELAYMS);
+        screen_draw_gcircle(&sc, i_pos, 3, GR_GREEN);
         screen_show(sc);
-        c++;
-        c=c%256;
-        usleep(5000);
-    }
+    })
     return 0;
 }

@@ -1,10 +1,13 @@
 #include "Graphics.h"
 
+
 int round_to_int(float f){
     int i=(int) f;
     f=f-i;
     return (f>=0.5)? i+1 : i;
 }
+
+int square(int x) {return x*x;}
 
 screen_t screen_init(int height, int width){
     screen_t s;
@@ -19,6 +22,7 @@ screen_t screen_init(int height, int width){
 }
 
 void screen_draw_gpixel(screen_t *screen, v2i_t p, color_t color){
+    if(p.x < 0 || p.y < 0 || p.x > screen->width-1 || p.y > screen->height-1) return;
     screen->pixel[p.y][p.x].text[0]=screen->pixel[p.y][p.x].text[1]=' ';
     screen->pixel[p.y][p.x].color=color;
     screen->pixel[p.y][p.x].init=1;
@@ -32,6 +36,7 @@ void screen_show(screen_t screen){
                 screen.pixel[y][x].color.g,
                 screen.pixel[y][x].color.b
             );
+            screen.pixel[y][x].init=0;
             fputs("  ", stdout);
             terminal_reset_color();
         }
@@ -73,39 +78,14 @@ void screen_draw_gtriangle(screen_t * screen, v2i_t p1, v2i_t p2, v2i_t p3, colo
     screen_draw_gline(screen, p3, p1, color);
 }
 
-/*
-void clear_screen(){
-    clear_terminal();
-    set_terminal_cursor(0,0);
+void screen_draw_gcircle(screen_t * screen, v2i_t center, int radius, color_t color){
+    v2i_t corner1={center.x-radius, center.y-radius};
+    v2i_t corner2={center.x+radius, center.y+radius};
+    for(int y = corner1.y; y<=corner2.y; ++y){
+        for(int x = corner1.x; x<=corner2.x; ++x){
+            if(square(x-center.x) + square(y-center.y) <= square(radius)){
+                screen_draw_gpixel(screen, (v2i_t){x, y}, color);
+            }
+        }
+    } 
 }
-
-void draw_triangle(int x1, int y1, int x2, int y2, int x3, int y3){
-    draw_line(x1, y1, x2, y2);
-    draw_line(x2, y2, x3, y3);
-    draw_line(x1, y1, x3, y3);
-}
-
-void draw_image_row(int x, int y, char*row){
-    set_terminal_cursor(y, x);
-    printf("%s", row);
-    fflush(stdout);
-}
-
-void draw_graph(float(*function)(float), color_t color){
-    pixel_t pixel;
-    color_t white={255, 255, 255};
-    int graph_x_center=35;
-    int graph_y_center=25;
-    int old_x=-10;
-    int old_y=-round_to_int(function(old_x))+graph_y_center;
-    int y=0;
-    draw_line(0, 25, 71, 25, white);
-    draw_line(35, 0, 35, 35, white);
-    for(int x=-9; x<=10; x++){
-        y=-round_to_int(function(x))+graph_y_center;
-        if(old_y>0 && y>0)
-            draw_line(old_x+graph_x_center, old_y, x+graph_x_center, y, color);
-        old_x=x;
-        old_y=y;
-    }
-}*/
