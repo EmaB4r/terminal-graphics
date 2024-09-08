@@ -1,6 +1,7 @@
 #include "Graphics.h"
 #include "ansi-terminal/Ansi.h"
 #include <stdio.h>
+#include <sys/types.h>
 
 enum gtype{graphics, ascii};
 
@@ -63,6 +64,13 @@ void _draw_circle(screen_t * screen, v2i_t center, int radius, char c ,color_t p
     }
 }
 
+void _draw_rectangle(screen_t *screen, v2i_t p1, v2i_t p2, char c, color_t px_color, color_t bg_color, enum gtype type){
+    _draw_line(screen, p1, (v2i_t){p2.x, p1.y}, c, px_color, bg_color, type);
+    _draw_line(screen, (v2i_t){p2.x, p1.y}, p2, c, px_color, bg_color, type);
+    _draw_line(screen, p2, (v2i_t){p1.x, p2.y}, c, px_color, bg_color, type);
+    _draw_line(screen, (v2i_t){p1.x, p2.y}, p1, c, px_color, bg_color, type);
+}
+
 
 screen_t screen_init(int height, int width){
     screen_t s;
@@ -106,6 +114,10 @@ void screen_draw_gcircle(screen_t * screen, v2i_t center, int radius, color_t bg
 
 void screen_draw_acircle(screen_t * screen, v2i_t center, int radius, char c ,color_t px_color, color_t bg_color){;
     _draw_circle(screen,center, radius, c, px_color, bg_color, ascii);
+}
+
+void screen_draw_arectangle(screen_t *screen, v2i_t p1, v2i_t p2, char c, color_t px_color, color_t bg_color){
+    _draw_rectangle(screen, p1, p2, c, px_color, bg_color, ascii);
 }
 
 void _show(screen_t screen, enum gtype type){
