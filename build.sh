@@ -1,2 +1,2 @@
 rm a.out
-gcc main.c Graphics.c ansi-terminal/Ansi.c
+gcc game.c Graphics.c ansi-terminal/Ansi.c
