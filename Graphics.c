@@ -82,11 +82,24 @@ void _draw_circle(screen_t * screen, v2i_t center, int radius, char c ,color_t p
     }
 }
 
-void _draw_rectangle(screen_t *screen, v2i_t p1, v2i_t p2, char c, color_t px_color, color_t bg_color, enum gtype type){
-    _draw_line(screen, p1, (v2i_t){p2.x, p1.y}, c, px_color, bg_color, type);
-    _draw_line(screen, (v2i_t){p2.x, p1.y}, p2, c, px_color, bg_color, type);
-    _draw_line(screen, p2, (v2i_t){p1.x, p2.y}, c, px_color, bg_color, type);
-    _draw_line(screen, (v2i_t){p1.x, p2.y}, p1, c, px_color, bg_color, type);
+void _draw_rectangle(screen_t *screen, v2i_t p1, v2i_t p2, char c, color_t px_color, color_t bg_color, enum gtype type, char fill){
+    if(fill){
+        if(p1.x>p2.x) p1.x^=p2.x^=p1.x^=p2.x;
+        if(p1.y>p2.y) p1.x^=p2.x^=p1.x^=p2.x;
+        for(int i = p1.y; i<= p2.y; i++){
+            for(int j = p1.x; j<=p2.x; j++){
+                screen->pixel[j][i].c=c;
+                screen->pixel[j][i].px_color=px_color;
+                screen->pixel[j][i].bg_color=bg_color;
+            }
+        }
+    }
+    else{
+        _draw_line(screen, p1, (v2i_t){p2.x, p1.y}, c, px_color, bg_color, type);
+        _draw_line(screen, (v2i_t){p2.x, p1.y}, p2, c, px_color, bg_color, type);
+        _draw_line(screen, p2, (v2i_t){p1.x, p2.y}, c, px_color, bg_color, type);
+        _draw_line(screen, (v2i_t){p1.x, p2.y}, p1, c, px_color, bg_color, type);
+    }
 }
 
 
@@ -140,8 +153,8 @@ void screen_draw_acircle(screen_t * screen, v2i_t center, int radius, char c ,co
     _draw_circle(screen,center, radius, c, px_color, bg_color, ascii);
 }
 
-void screen_draw_arectangle(screen_t *screen, v2i_t p1, v2i_t p2, char c, color_t px_color, color_t bg_color){
-    _draw_rectangle(screen, p1, p2, c, px_color, bg_color, ascii);
+void screen_draw_arectangle(screen_t *screen, v2i_t p1, v2i_t p2, char c, color_t px_color, color_t bg_color, char fill){
+    _draw_rectangle(screen, p1, p2, c, px_color, bg_color, ascii, fill);
 }
 
 void _show(screen_t screen, enum gtype type){

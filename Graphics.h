@@ -59,7 +59,9 @@ void screen_gshow(screen_t screen);
 void screen_draw_apixel(screen_t *screen, v2i_t p,  char c ,color_t px_color, color_t bg_color);
 void screen_draw_aline(screen_t *screen, v2i_t p1, v2i_t p2, char c, color_t px_color, color_t bg_color);
 void screen_draw_atriangle(screen_t * screen, v2i_t p1, v2i_t p2, v2i_t p3, color_t px_color,color_t bg_color);
-void screen_draw_arectangle(screen_t *screen, v2i_t p1, v2i_t p2, char c, color_t px_color, color_t bg_color);
+void screen_draw_arectangle(screen_t *screen, 
+    v2i_t p1, v2i_t p2, char c, 
+    color_t px_color, color_t bg_color, char fill);
 void screen_ashow(screen_t screen);
 void screen_draw_acircle(screen_t * screen, v2i_t center, int radius, char c ,color_t px_color, color_t bg_color);
 
