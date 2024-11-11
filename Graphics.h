@@ -7,8 +7,10 @@
 #include "ansi-terminal/Ansi.h"
 #include <string.h>
 #include <termios.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
+
 
 typedef struct v2d{double x, y;}v2d_t;
 typedef struct v2i{int x, y;}v2i_t;

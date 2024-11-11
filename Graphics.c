@@ -28,6 +28,8 @@ void set_raw_mode() {
     struct termios new_tio = original_tio;
     new_tio.c_lflag &= ~(ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
+    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 }
 
 void _draw_pixel(screen_t *screen, v2i_t p,  char c ,color_t px_color, color_t bg_color, enum gtype type){
