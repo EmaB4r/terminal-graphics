@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include "ansi-terminal/Ansi.h"
 #include <string.h>
+#include <termios.h>
+#include <unistd.h>
+#include <signal.h>
 
 typedef struct v2d{double x, y;}v2d_t;
 typedef struct v2i{int x, y;}v2i_t;
@@ -15,7 +18,6 @@ typedef struct pixel_s{
     color_t bg_color;
     color_t px_color;
     char c;
-    char init;
 }pixel_t;
 
 typedef struct screen_s{

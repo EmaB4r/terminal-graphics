@@ -1,7 +1,6 @@
 #include "Graphics.h"
-#include "ansi-terminal/Ansi.h"
-#include <stdio.h>
-#include <sys/types.h>
+
+#define square(x) x*x
 
 enum gtype{graphics, ascii};
 
@@ -11,14 +10,31 @@ int round_to_int(float f){
     return (f>=0.5)? i+1 : i;
 }
 
-int square(int x) {return x*x;}
+char terminal_initialized=0;
+
+struct termios original_tio;
+
+void save_terminal_state() {
+    tcgetattr(STDIN_FILENO, &original_tio);
+}
+
+void restore_terminal_state() {
+    tcsetattr(STDIN_FILENO, TCSANOW, &original_tio);
+    terminal_show_cursor();
+    exit(0);
+}
+
+void set_raw_mode() {
+    struct termios new_tio = original_tio;
+    new_tio.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
+}
 
 void _draw_pixel(screen_t *screen, v2i_t p,  char c ,color_t px_color, color_t bg_color, enum gtype type){
     if(p.x < 0 || p.y < 0 || p.x > screen->width-1 || p.y > screen->height-1) return;
     screen->pixel[p.y][p.x].c=c;
     screen->pixel[p.y][p.x].px_color=px_color;
     screen->pixel[p.y][p.x].bg_color=bg_color;
-    screen->pixel[p.y][p.x].init=1;
 }
 
 void _draw_line(screen_t *screen, v2i_t p1, v2i_t p2, char c ,color_t px_color, color_t bg_color, enum gtype type){
@@ -73,6 +89,12 @@ void _draw_rectangle(screen_t *screen, v2i_t p1, v2i_t p2, char c, color_t px_co
 
 
 screen_t screen_init(int height, int width){
+    if(!terminal_initialized){
+        terminal_initialized=1;
+        save_terminal_state();
+        set_raw_mode();
+        signal(SIGINT, restore_terminal_state);
+    }
     screen_t s;
     s.height=height;
     s.width=width;
@@ -105,7 +127,7 @@ void screen_draw_gtriangle(screen_t * screen, v2i_t p1, v2i_t p2, v2i_t p3, colo
 }
 
 void screen_draw_atriangle(screen_t * screen, v2i_t p1, v2i_t p2, v2i_t p3, color_t px_color,color_t bg_color){
-    _draw_triangle(screen, p1, p2, p3, 't', bg_color, bg_color, ascii);
+    _draw_triangle(screen, p1, p2, p3, 't', px_color, bg_color, ascii);
 }
 
 void screen_draw_gcircle(screen_t * screen, v2i_t center, int radius, color_t bg_color){
@@ -124,7 +146,7 @@ void _show(screen_t screen, enum gtype type){
     for(int y=0; y<screen.height; y++){
         for(int x=0; x<screen.width; x++){
             if(type == ascii){
-                if(screen.pixel[y][x].init) {
+                if(screen.pixel[y][x].c) {
                     terminal_set_rgb_background(
                     screen.pixel[y][x].bg_color.r,
                     screen.pixel[y][x].bg_color.g,
@@ -134,7 +156,6 @@ void _show(screen_t screen, enum gtype type){
                     screen.pixel[y][x].px_color.g,
                     screen.pixel[y][x].px_color.b);
                     
-                    screen.pixel[y][x].init=0;
                     putc(screen.pixel[y][x].c, stdout);
                     terminal_reset_color();
                 }
@@ -143,13 +164,10 @@ void _show(screen_t screen, enum gtype type){
                 }
             }
             else{
-                if(screen.pixel[y][x].init) {
-                    terminal_set_rgb_background(
-                    screen.pixel[y][x].bg_color.r,
-                    screen.pixel[y][x].bg_color.g,
-                    screen.pixel[y][x].bg_color.b);
-                }
-                screen.pixel[y][x].init=0;
+                terminal_set_rgb_background(
+                screen.pixel[y][x].bg_color.r,
+                screen.pixel[y][x].bg_color.g,
+                screen.pixel[y][x].bg_color.b);
                 fputs("  ", stdout);
                 terminal_reset_color();
             }
