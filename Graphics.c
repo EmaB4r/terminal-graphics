@@ -134,6 +134,16 @@ screen_t screen_init(int height, int width){
     return s;
 }
 
+void screen_copy(screen_t * dest, screen_t * src){
+    if(dest->height==src->height && dest->width==src->width){
+        for(int i = 0; i < src->height; ++i){
+            for(int j = 0; j < src->width; ++j){
+                dest->pixel[i][j] = src->pixel[i][j];
+            }
+        }
+    }
+}
+
 void screen_draw_gpixel(screen_t *screen, v2i_t p, color_t color){
     _draw_pixel(screen, p, ' ', color, color, graphics);
 }
