@@ -1,4 +1,5 @@
 #include "Graphics.h"
+#include "ansi-terminal/Ansi.h"
 
 #define square(x) x*x
 
@@ -28,9 +29,19 @@ void set_raw_mode() {
     struct termios new_tio = original_tio;
     new_tio.c_lflag &= ~(ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
-    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 }
+
+struct timeval timeout;
+unsigned char getkey(FILE* stream){
+    int fd = fileno(stream);
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(fd, &readfds);
+    int result = select(fd + 1, &readfds, NULL, NULL, &timeout);
+    if (result > 0 && FD_ISSET(fd, &readfds)) return getc(stdin);
+    return 0;
+}
+
 
 void _draw_pixel(screen_t *screen, v2i_t p,  char c ,color_t px_color, color_t bg_color, enum gtype type){
     if(p.x < 0 || p.y < 0 || p.x > screen->width-1 || p.y > screen->height-1) return;
@@ -88,9 +99,9 @@ void _draw_rectangle(screen_t *screen, v2i_t p1, v2i_t p2, char c, color_t px_co
         if(p1.y>p2.y) p1.x^=p2.x^=p1.x^=p2.x;
         for(int i = p1.y; i<= p2.y; i++){
             for(int j = p1.x; j<=p2.x; j++){
-                screen->pixel[j][i].c=c;
-                screen->pixel[j][i].px_color=px_color;
-                screen->pixel[j][i].bg_color=bg_color;
+                screen->pixel[i][j].c=c;
+                screen->pixel[i][j].px_color=px_color;
+                screen->pixel[i][j].bg_color=bg_color;
             }
         }
     }
@@ -109,6 +120,8 @@ screen_t screen_init(int height, int width){
         save_terminal_state();
         set_raw_mode();
         signal(SIGINT, restore_terminal_state);
+        timeout.tv_sec = 0;
+        timeout.tv_usec = 1000;
     }
     screen_t s;
     s.height=height;
@@ -156,12 +169,15 @@ void screen_draw_acircle(screen_t * screen, v2i_t center, int radius, char c ,co
 void screen_draw_arectangle(screen_t *screen, v2i_t p1, v2i_t p2, char c, color_t px_color, color_t bg_color, char fill){
     _draw_rectangle(screen, p1, p2, c, px_color, bg_color, ascii, fill);
 }
+void screen_draw_grectangle(screen_t *screen, v2i_t p1, v2i_t p2, color_t bg_color, char fill){
+    _draw_rectangle(screen, p1, p2, ' ' , bg_color, bg_color, graphics, fill);
+}
 
 void _show(screen_t screen, enum gtype type){
     for(int y=0; y<screen.height; y++){
         for(int x=0; x<screen.width; x++){
             if(type == ascii){
-                if(screen.pixel[y][x].c) {
+                if(screen.pixel[y][x].c != 0) {
                     terminal_set_rgb_background(
                     screen.pixel[y][x].bg_color.r,
                     screen.pixel[y][x].bg_color.g,
@@ -172,7 +188,6 @@ void _show(screen_t screen, enum gtype type){
                     screen.pixel[y][x].px_color.b);
                     
                     putc(screen.pixel[y][x].c, stdout);
-                    terminal_reset_color();
                 }
                 else {
                     putc(' ', stdout);
@@ -184,8 +199,9 @@ void _show(screen_t screen, enum gtype type){
                 screen.pixel[y][x].bg_color.g,
                 screen.pixel[y][x].bg_color.b);
                 fputs("  ", stdout);
-                terminal_reset_color();
             }
+            terminal_reset_color();
+
         }
         putc('\n', stdout);
     }
@@ -199,5 +215,22 @@ void screen_gshow(screen_t screen){
 }
 
 void screen_ashow(screen_t screen){
-    _show(screen, ascii);
+    terminal_set_cursor_pos(2, 1);
+    for(int y=0; y<screen.height; y++){
+        for(int x=0; x<screen.width; x++){
+            
+            terminal_set_rgb_background(
+            screen.pixel[y][x].bg_color.r,
+            screen.pixel[y][x].bg_color.g,
+            screen.pixel[y][x].bg_color.b);
+            terminal_set_rgb_text(
+            screen.pixel[y][x].px_color.r,
+            screen.pixel[y][x].px_color.g,
+            screen.pixel[y][x].px_color.b);
+            
+            putc(screen.pixel[y][x].c, stdout);
+            fflush(stdout);
+        }
+        putc('\n', stdout);
+    }
 }
