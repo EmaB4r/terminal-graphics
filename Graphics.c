@@ -122,6 +122,7 @@ canvas_t canvas_init(int height, int width){
         signal(SIGINT, restore_terminal_state);
         timeout.tv_sec = 0;
         timeout.tv_usec = 1000;
+        clear_terminal();
     }
     canvas_t s;
     s.height=height;
