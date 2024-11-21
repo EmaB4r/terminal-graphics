@@ -222,7 +222,20 @@ void _show(canvas_t canvas, enum gtype type){
 
 
 void canvas_gshow(canvas_t canvas){
-    _show(canvas, graphics);
+    terminal_set_cursor_pos(2, 1);
+    for(int y=0; y<canvas.height; y++){
+        for(int x=0; x<canvas.width; x++){
+            
+            terminal_set_rgb_background(
+            canvas.pixel[y][x].bg_color.r,
+            canvas.pixel[y][x].bg_color.g,
+            canvas.pixel[y][x].bg_color.b);
+            fputs("  ", stdout);
+            fflush(stdout);
+        }
+        terminal_reset_color();
+        putc('\n', stdout);
+    }
 }
 
 void canvas_ashow(canvas_t canvas){
