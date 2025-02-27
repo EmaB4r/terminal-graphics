@@ -22,6 +22,8 @@ void save_terminal_state() {
 void restore_terminal_state() {
     tcsetattr(STDIN_FILENO, TCSANOW, &original_tio);
     terminal_show_cursor();
+    terminal_set_cursor_pos(1, 1);
+    clear_terminal();
     exit(0);
 }
 
