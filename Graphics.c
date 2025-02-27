@@ -50,28 +50,31 @@ void _draw_pixel(canvas_t *canvas, v2i_t p,  char c ,color_t px_color, color_t b
     canvas->pixel[p.y][p.x].bg_color=bg_color;
 }
 
-void _draw_line(canvas_t *canvas, v2i_t p1, v2i_t p2, char c ,color_t px_color, color_t bg_color, enum gtype type){
-    if(p1.x==p2.x && p1.y==p2.y){
-        _draw_pixel(canvas, p1, c, px_color, bg_color, type);
-        return;
-    }
-    if(p1.x==p2.x){
-        if(p1.y>p2.y)
-            p1.y^=p2.y^=p1.y^=p2.y;
-        for(int y=p1.y; y<=p2.y; y++){
-            _draw_pixel(canvas, (v2i_t){p1.x, y}, c, px_color, bg_color, type);
+void _draw_line(canvas_t *canvas, v2i_t p1, v2i_t p2, char c, color_t px_color, color_t bg_color, enum gtype type) {
+    int dx = abs(p2.x - p1.x);
+    int dy = -abs(p2.y - p1.y);
+    int sx = p1.x < p2.x ? 1 : -1;
+    int sy = p1.y < p2.y ? 1 : -1;
+    int err = dx + dy;
+    int current_x = p1.x;
+    int current_y = p1.y;
+
+    while(1) {
+        _draw_pixel(canvas, (v2i_t){current_x, current_y}, c, px_color, bg_color, type);
+        
+        if(current_x == p2.x && current_y == p2.y) break;
+        
+        int e2 = 2 * err;
+        if(e2 >= dy) { // Horizontal step
+            if(current_x == p2.x) break;
+            err += dy;
+            current_x += sx;
         }
-        return;
-    }
-    if(p1.x>p2.x){
-        p1.x^=p2.x^=p1.x^=p2.x;
-        p1.y^=p2.y^=p1.y^=p2.y;
-    }
-    double m = (double)(p2.y-p1.y)/(p2.x-p1.x);
-    double q = (double)(p2.y-m*p2.x);
-    for(int x=p1.x, y; x<=p2.x; x++){
-        y=round_to_int(m*x+q);
-        _draw_pixel(canvas, (v2i_t){x,y}, c, px_color, bg_color, type);
+        if(e2 <= dx) { // Vertical step
+            if(current_y == p2.y) break;
+            err += dx;
+            current_y += sy;
+        }
     }
 }
 
@@ -84,9 +87,12 @@ void _draw_triangle(canvas_t *canvas, v2i_t p1, v2i_t p2, v2i_t p3,char c ,color
 void _draw_circle(canvas_t * canvas, v2i_t center, int radius, char c ,color_t px_color, color_t bg_color, enum gtype type){
     v2i_t corner1={center.x-radius, center.y-radius};
     v2i_t corner2={center.x+radius, center.y+radius};
+    
     for(int y = corner1.y; y<=corner2.y; ++y){
         for(int x = corner1.x; x<=corner2.x; ++x){
-            if(square(x-center.x) + square(y-center.y) <= square(radius)){
+            int dx = (x - center.x);
+            int dy = y - center.y;
+            if(dx*dx + dy*dy <= radius*radius){
                 _draw_pixel(canvas, (v2i_t){x, y}, c, px_color, bg_color, type);
             }
         }
