@@ -1,6 +1,8 @@
 # Terminal Graphics
 C in-terminal graphic library
 
+[cube](videos/cube.mp4)
+
 <!DOCTYPE html>
 <html>
 <head>
