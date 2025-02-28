@@ -1,6 +1,9 @@
 #include "Graphics.h"
 #include "ansi-terminal/Ansi.h"
 
+// TODO: check if it would be better to buffer the current canvas 
+// and the previous one and just print the differences instead of redrawing
+
 #define square(x) x*x
 
 enum gtype{graphics, ascii};
@@ -24,6 +27,7 @@ void restore_terminal_state() {
     terminal_show_cursor();
     terminal_set_cursor_pos(1, 1);
     clear_terminal();
+    terminal_reset_color();
     exit(0);
 }
 
